@@ -1,9 +1,33 @@
 #!/bin/bash
-source utils.sh
-source apache.sh
-source mysql.sh
-source php.sh
-source phpmyadmin.sh
+
+# Base URL to download the scripts
+BASE_URL="https://raw.githubusercontent.com/yourusername/LAMP-Auto-Installer/main"
+
+# Download the necessary files if they don't already exist
+download_files() {
+  files=("utils.sh" "apache.sh" "mysql.sh" "php.sh" "phpmyadmin.sh")
+
+  for file in "${files[@]}"; do
+    if [ ! -f "$file" ]; then
+      echo "Downloading $file..."
+      wget -q "$BASE_URL/$file" -O "$file"
+      if [ $? -ne 0 ]; then
+        echo "Failed to download $file. Exiting."
+        exit 1
+      fi
+      chmod +x "$file"
+    fi
+  done
+}
+
+# Load the downloaded scripts
+load_scripts() {
+  source ./utils.sh
+  source ./apache.sh
+  source ./mysql.sh
+  source ./php.sh
+  source ./phpmyadmin.sh
+}
 
 # Default values
 pass="testT8080"
@@ -20,6 +44,12 @@ while [ "$1" != "" ]; do
     * ) echo "Unknown option: $1"; show_help; exit 1;;
   esac
 done
+
+# Download necessary files
+download_files
+
+# Load the scripts
+load_scripts
 
 # Check if LAMP stack is already installed
 if is_lamp_installed; then
@@ -42,7 +72,7 @@ install_php "${php_versions[@]}"
 
 # Optional Supervisor installation
 if [ "$install_supervisor" = true ]; then
-  source supervisor.sh
+  source ./supervisor.sh
   install_supervisor_service
 fi
 
