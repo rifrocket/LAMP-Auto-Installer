@@ -217,7 +217,7 @@ done
 
 
 # Add PHP repository to ensure the latest PHP versions are available
-add_php_repository
+# add_php_repository
 
 # Check if LAMP stack is already installed
 if is_lamp_installed; then
