@@ -29,6 +29,28 @@ load_scripts() {
   source ./phpmyadmin.sh
 }
 
+# Check for PHP versions and install the latest stable version if php8.2 is not available
+install_latest_php() {
+  local available_php_version=$(apt-cache search php | grep -oP 'php[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+
+  if [ -n "$available_php_version" ]; then
+    echo "Installing PHP version $available_php_version..."
+    sudo apt-get install -y "$available_php_version" libapache2-mod-"$available_php_version" php"$available_php_version"-mysql php"$available_php_version"-curl > /dev/null 2>&1
+    sudo a2enmod "$available_php_version"
+    sudo systemctl restart apache2
+  else
+    echo "ERROR: No PHP version found in repositories!"
+    exit 1
+  fi
+}
+
+# Ensure proper permissions for PhpMyAdmin
+fix_phpmyadmin_permissions() {
+  sudo chown -R www-data:www-data /usr/share/phpmyadmin
+  sudo chmod -R 755 /usr/share/phpmyadmin
+  echo "PhpMyAdmin permissions fixed."
+}
+
 # Default values
 pass="testT8080"
 php_versions=("8.2")
@@ -68,7 +90,17 @@ fi
 run_update
 install_apache
 install_mysql "$pass"
-install_php "${php_versions[@]}"
+
+# PHP Installation - Handle case where PHP 8.2 is not available
+if apt-cache search php8.2 | grep php8.2 > /dev/null; then
+  install_php "8.2"
+else
+  echo "PHP 8.2 not found, installing the latest available PHP version..."
+  install_latest_php
+fi
+
+# Fix PhpMyAdmin access issues
+fix_phpmyadmin_permissions
 
 # Optional Supervisor installation
 if [ "$install_supervisor" = true ]; then
@@ -78,4 +110,14 @@ fi
 
 install_phpmyadmin "$pass"
 
-echo "Installation complete. Access your server at http://$(get_server_ip)"
+# Display completion message
+ip=$(get_server_ip)
+echo "+-------------------------------------------+"
+echo "|    Finish Auto Install and Setup LAMP      |"
+echo "|                                           |"
+echo "| Web Site: http://$ip/"
+echo "| PhpMyAdmin: http://$ip/phpmyadmin"
+echo "| User: root || Pass: $pass"
+echo "| Test PHP: http://$ip/info.php"
+echo "| Warning: Delete info.php for security      |"
+echo "+-------------------------------------------+"
