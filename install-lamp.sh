@@ -108,18 +108,19 @@ install_mysql() {
 
 # Function to detect OS and add the appropriate PHP repository
 add_php_repository() {
+  echo "+--------------------------------------+"
+  echo "|     Adding PHP Repository            |"
+  echo "+--------------------------------------+"
   # Get the OS details
   os_name=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
   os_version=$(lsb_release -cs)
 
   if [[ "$os_name" == "ubuntu" ]]; then
     # Add PHP PPA for Ubuntu
-    echo "Detected Ubuntu. Adding PHP PPA for Ubuntu..."
     sudo add-apt-repository ppa:ondrej/php -y
     sudo apt-get update
   elif [[ "$os_name" == "debian" ]]; then
     # Add PHP repository for Debian
-    echo "Detected Debian. Adding PHP repository for Debian..."
     sudo apt install -y apt-transport-https lsb-release ca-certificates curl
     curl -fsSL https://packages.sury.org/php/README.txt | sudo bash -x
     sudo apt-get update
