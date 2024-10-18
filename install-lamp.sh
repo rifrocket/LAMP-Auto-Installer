@@ -134,6 +134,8 @@ add_php_repository() {
   echo "|    PHP Repository Added Successfully |"
   echo "+--------------------------------------+"
 }
+
+
 # Install PHP and the required extensions
 install_php() {
   local php_version=$1
@@ -199,6 +201,12 @@ install_supervisor() {
   echo "+--------------------------------------+"
 }
 
+# Remove existing LAMP stack
+remove_existing_installation() {
+  sudo apt-get purge -y apache2 mysql-server php phpmyadmin > /dev/null 2>&1
+  sudo apt-get autoremove -y > /dev/null 2>&1
+  sudo apt-get autoclean -y > /dev/null 2>&1
+}
 
 # Parse arguments
 while [ "$1" != "" ]; do
