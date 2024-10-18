@@ -46,6 +46,14 @@ To install Supervisor along with the LAMP stack, pass the `--supervisor` flag:
 sudo bash install-lamp.sh --supervisor
 ```
 
+### Install Nginx Instead of Apache
+
+You can install Nginx instead of Apache by passing the `--nginx` flag:
+
+```bash
+sudo bash install-lamp.sh --nginx
+```
+
 ### Help
 
 For help and available options, run:

@@ -4,12 +4,13 @@
 pass="testT8080"
 php_versions=("8.2")
 install_supervisor=false
-web_server="apache2"
+web_server="apache"
 
 # Show help message
 show_help() {
   echo "Usage: install-lamp.sh [options]"
   echo "Options:"
+  echo "  -w, --web-server       Set web server (apache or nginx) (default: apache)"
   echo "  -p, --password         Set MySQL root password (default: testT8080)"
   echo "  -v, --php-versions     Install PHP versions (default: 8.2)"
   echo "  --supervisor           Install Supervisor for process management (default: false)"
@@ -84,41 +85,93 @@ echo "+--------------------------------------+"
 
 }
 
-# Install Nginx
+# Function to install and configure Nginx
 install_nginx() {
-  echo "+--------------------------------------+"
-  echo "|     Installing Nginx                 |"
-  echo "+--------------------------------------+"
-  sudo apt-get install -y nginx > /dev/null 2>&1
-  sudo ufw allow 'Nginx HTTP'
-  sudo systemctl start nginx
-  sudo systemctl enable nginx
-  sudo nginx -t
+    echo "+--------------------------------------+"
+    echo "|     Installing Nginx                 |"
+    echo "+--------------------------------------+"
 
-    sudo tee /var/www/html/index.html > /dev/null <<END
-  <!DOCTYPE html>
-  <html>
-  <head>
-  <title>Welcome to Nginx!</title>
-  </head>
-  <body>
-  <h1>Nginx is installed!</h1>
-  <?php
-    phpinfo();
-  ?>
-  </body>
-  </html>
-END
+    # Install Nginx
+    sudo apt-get update
+    sudo apt-get install -y nginx
+    
+    # Enable Nginx to start at boot and start it now
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
 
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Nginx installation failed. Check the Nginx configuration."
-    exit 1
-  fi
+    # Install PHP and PHP-FPM
+    sudo apt-get install -y php8.2-fpm php8.2-mbstring php8.2-xml php8.2-mysql
 
-  echo "+--------------------------------------+"
-  echo "|     Nginx Installed Successfully      |"
-  echo "+--------------------------------------+"
+    # Configure Nginx to use PHP-FPM
+    sudo tee /etc/nginx/sites-available/default > /dev/null <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
+
+    root /var/www/html;
+    index index.php index.html index.htm;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
 }
+EOF
+
+    # Test Nginx configuration and reload
+    sudo nginx -t && sudo systemctl reload nginx
+
+    # Ensure PHP-FPM is running
+    sudo systemctl enable php8.2-fpm
+    sudo systemctl start php8.2-fpm
+
+    # Create a custom Nginx welcome page
+    sudo tee /var/www/html/index.html > /dev/null <<EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Welcome to Your Nginx Server!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Your Nginx Server!</h1>
+    <p>The Nginx web server is installed and running on your server.</p>
+    <p>PHP version: <?php echo phpversion(); ?></p>
+</body>
+</html>
+EOF
+
+    echo "Custom Nginx welcome page created successfully."
+    echo "Nginx installed and configured successfully."
+}
+
+
+
 
 # Install MySQL
 install_mysql() {
@@ -348,6 +401,7 @@ fix_phpmyadmin_deprecation() {
 # Parse arguments
 while [ "$1" != "" ]; do
   case "$1" in
+    -w | --web-server ) web_server=$2; shift 2;;
     -p | --password ) pass=$2; shift 2;;
     -v | --php-versions ) IFS=',' read -r -a php_versions <<< "$2"; shift 2;;
     --supervisor ) install_supervisor=true; shift;;
@@ -377,7 +431,17 @@ fi
 
 # Run the installation steps
 run_update
-install_apache
+
+# Install Server
+if [ "$web_server" == "apache" ]; then
+  install_apache
+elif [ "$web_server" == "nginx" ]; then
+  install_nginx
+else
+  echo "Unsupported web server: $web_server"
+  exit 1
+fi
+
 install_mysql "$pass"
 install_php "$php_versions"
 install_phpmyadmin "$pass"
