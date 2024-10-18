@@ -4,6 +4,7 @@
 pass="testT8080"
 php_versions=("8.2")
 install_supervisor=false
+web_server="apache2"
 
 # Show help message
 show_help() {
@@ -83,6 +84,42 @@ echo "+--------------------------------------+"
 
 }
 
+# Install Nginx
+install_nginx() {
+  echo "+--------------------------------------+"
+  echo "|     Installing Nginx                 |"
+  echo "+--------------------------------------+"
+  sudo apt-get install -y nginx > /dev/null 2>&1
+  sudo ufw allow 'Nginx HTTP'
+  sudo systemctl start nginx
+  sudo systemctl enable nginx
+  sudo nginx -t
+
+    sudo tee /var/www/html/index.html > /dev/null <<END
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <title>Welcome to Nginx!</title>
+  </head>
+  <body>
+  <h1>Nginx is installed!</h1>
+  <?php
+    phpinfo();
+  ?>
+  </body>
+  </html>
+END
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Nginx installation failed. Check the Nginx configuration."
+    exit 1
+  fi
+
+  echo "+--------------------------------------+"
+  echo "|     Nginx Installed Successfully      |"
+  echo "+--------------------------------------+"
+}
+
 # Install MySQL
 install_mysql() {
   local pass=$1
@@ -111,6 +148,7 @@ add_php_repository() {
   echo "+--------------------------------------+"
   echo "|     Adding PHP Repository            |"
   echo "+--------------------------------------+"
+
   # Get the OS details
   os_name=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
   os_version=$(lsb_release -cs)
@@ -270,6 +308,34 @@ remove_existing_installation() {
   echo "+--------------------------------------+"
 }
 
+
+# Function to fix deprecated http_build_query usage in PhpMyAdmin
+fix_phpmyadmin_deprecation() {
+    echo "+--------------------------------------+"
+    echo "|     Fixing PhpMyAdmin Deprecation    |"
+    echo "+--------------------------------------+"
+
+    # Path to the PhpMyAdmin Url.php file
+    PHPMYADMIN_URL_PHP="/usr/share/phpmyadmin/libraries/classes/Url.php"
+
+    # Check if the file exists
+    if [ -f "$PHPMYADMIN_URL_PHP" ]; then
+        # Use sed to find and replace the deprecated code
+        sudo sed -i 's/http_build_query(\$queryParams, null, /http_build_query(\$queryParams, "", /' "$PHPMYADMIN_URL_PHP"
+
+        if [ $? -eq 0 ]; then
+            echo "PhpMyAdmin deprecation issue fixed successfully."
+        else
+            echo "ERROR: Failed to fix PhpMyAdmin deprecation issue."
+            exit 1
+        fi
+    else
+        echo "ERROR: PhpMyAdmin Url.php file not found."
+        exit 1
+    fi
+}
+
+
 # Parse arguments
 while [ "$1" != "" ]; do
   case "$1" in
@@ -306,6 +372,7 @@ install_apache
 install_mysql "$pass"
 install_php "$php_versions"
 install_phpmyadmin "$pass"
+fix_phpmyadmin_deprecation
 
 # check if supervisor is to be installed
 if [ "$install_supervisor" = true ]; then
