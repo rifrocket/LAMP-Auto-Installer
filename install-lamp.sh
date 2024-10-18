@@ -111,13 +111,21 @@ add_php_repository() {
   echo "+--------------------------------------+"
   echo "|     Adding PHP Repository            |"
   echo "+--------------------------------------+"
+  
   # Get the OS details
   os_name=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
   os_version=$(lsb_release -cs)
 
   if [[ "$os_name" == "ubuntu" ]]; then
-    # Add PHP PPA for Ubuntu
-    sudo add-apt-repository ppa:ondrej/php -y
+    # Check if the current Ubuntu version is supported by the PPA
+    if [[ "$os_version" == "focal" || "$os_version" == "bionic" ]]; then
+      # Add PHP PPA for supported Ubuntu versions
+      sudo add-apt-repository ppa:ondrej/php -y
+    else
+      # Default to 'focal' repository for unsupported versions
+      echo "Ubuntu version '$os_version' is not directly supported. Defaulting to 'focal' repository."
+      sudo add-apt-repository "deb http://ppa.launchpad.net/ondrej/php/ubuntu focal main" -y
+    fi
     sudo apt-get update
   elif [[ "$os_name" == "debian" ]]; then
     # Add PHP repository for Debian
