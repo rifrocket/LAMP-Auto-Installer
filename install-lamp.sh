@@ -21,12 +21,12 @@ while [ "$1" != "" ]; do
   esac
 done
 
-# Check if the script has been run before
-if [ -f /var/www/html/info.php ]; then
-  echo "LAMP stack is already installed. Do you want to reinstall? (y/n)"
+# Check if LAMP stack is already installed
+if is_lamp_installed; then
+  echo "LAMP stack seems to be already installed. Do you want to reinstall? (y/n)"
   read -r choice
   if [ "$choice" != "y" ]; then
-    echo "Aborting."
+    echo "Aborting installation."
     exit 1
   else
     echo "Removing existing LAMP stack..."

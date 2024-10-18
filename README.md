@@ -1,17 +1,19 @@
+
 # LAMP Auto-Installer
 
 ## Overview
 
-This is a fully automated script to install and set up a **LAMP (Linux, Apache, MySQL, PHP)** stack on any DigitalOcean droplet or Ubuntu server. It also includes the installation of **phpMyAdmin** for database management and configuration of **Apache** and **PHP 8.2**. This script is designed to make the process seamless and reduce manual intervention.
+This is a fully automated script to install and set up a **LAMP (Linux, Apache, MySQL, PHP)** stack on any DigitalOcean droplet or Ubuntu server. It also includes the installation of **phpMyAdmin** for database management and configuration of **Apache** and **PHP** (supporting multiple versions). This script is designed to make the process seamless and reduce manual intervention.
 
 ## Features
 
 - **Apache Web Server**: Serves your web applications.
 - **MySQL Database**: Handles your database with secure installation.
-- **PHP 8.2**: Latest PHP version with necessary extensions.
+- **Multiple PHP Versions**: You can specify which PHP versions to install (default: 8.2).
 - **phpMyAdmin**: Database management tool accessible via browser.
+- **Optional Supervisor**: Install Supervisor for process management if required.
+- **Reinstallation Alert**: If LAMP stack is already installed, the script will prompt for reinstallation.
 - **Automated Configuration**: Automatically configures Apache, PHP, and MySQL with default values or user-provided settings.
-- **Default Web Pages**: Simple web page and PHP info page to confirm the installation.
 
 ## Requirements
 
@@ -28,17 +30,21 @@ Run the following one-liner on your server to automatically download and execute
 wget --no-check-certificate -O /tmp/install-lamp.sh https://raw.githubusercontent.com/rifrocket/LAMP-Auto-Installer/main/install-lamp.sh; sudo bash /tmp/install-lamp.sh
 ```
 
-### Custom Password
+### Custom Password and PHP Versions
 
-You can set a custom MySQL root password by passing the `-p` or `--password` flag:
+You can set a custom MySQL root password and specify multiple PHP versions by passing the `-p` or `--password` and `-v` or `--php-versions` flags:
 
 ```bash
-sudo bash install-lamp.sh -p MyCustomPassword123
+sudo bash install-lamp.sh -p MyCustomPassword123 -v 7.4,8.2
 ```
 
-### Default Installation
+### Optional Supervisor Installation
 
-If no password is provided, the script will use the default MySQL password `testT8080`.
+To install Supervisor along with the LAMP stack, pass the `--supervisor` flag:
+
+```bash
+sudo bash install-lamp.sh --supervisor
+```
 
 ### Help
 
@@ -65,11 +71,12 @@ After the installation is complete, you can access your server’s LAMP stack vi
 1. **System Update**: The script updates your system’s package index.
 2. **Install Apache**: Installs and configures Apache web server.
 3. **Install MySQL**: Installs MySQL and secures it with automated responses.
-4. **Install PHP 8.2**: Installs PHP and its necessary extensions.
+4. **Install Multiple PHP Versions**: Installs PHP versions (you can specify multiple versions).
 5. **Configure PHP**: Updates PHP settings (e.g., timezone, max upload size).
-6. **Install phpMyAdmin**: Sets up phpMyAdmin for database management.
+6. **Install PhpMyAdmin**: Sets up phpMyAdmin for database management.
 7. **Restart Services**: Automatically restarts Apache and PHP services to apply changes.
 8. **Display Installation Summary**: Shows access details for the web server, phpMyAdmin, and PHP.
+9. **Optional Supervisor Installation**: Installs Supervisor for process management (if specified).
 
 ## Customization
 
@@ -79,25 +86,15 @@ The script can be easily modified to suit your needs. Some customization options
 - Updating the **max_execution_time** and **upload_max_filesize** in PHP.
 - Modifying the **document root** of the Apache server.
 
-Feel free to fork this repository and modify the script as needed!
+## Reinstallation Prompt
+
+If the script detects that Apache, MySQL, and PHP are already installed, it will prompt you to decide whether to reinstall the LAMP stack.
 
 ## Troubleshooting
 
 - **Unable to access phpMyAdmin**: Make sure Apache is running and there are no firewall rules blocking HTTP traffic.
 - **MySQL login issues**: If you forget the MySQL root password, rerun the script with the `-p` flag to set a new password.
 - **Apache service not starting**: Check the logs using `sudo journalctl -xe` for Apache-related errors.
-
-## Logs
-
-All the installation processes are silently handled, but you can remove the `> /dev/null 2>&1` from the script if you'd like to see the output of each command.
-
-## Directory Structure
-
-```
-LAMP-Auto-Installer/
-├── install-lamp.sh     # The installation script
-├── README.md           # This documentation file
-```
 
 ## Contributions
 
@@ -112,5 +109,3 @@ If you’d like to contribute to this project:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-PAF*VK-Lq&xc9bG
