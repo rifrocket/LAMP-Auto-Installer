@@ -156,7 +156,7 @@ install_php() {
   fi
 
   echo "+--------------------------------------+"
-  echo "|    PHP $php_version Installed        |"
+  echo "|    PHP $php_version Installed"
   echo "+--------------------------------------+"
 }
 
@@ -261,11 +261,11 @@ fi
 # Display completion message
 ip=$(get_server_ip)
 echo "+-------------------------------------------+"
-echo "|    Finish Auto Install and Setup LAMP      |"
-echo "|                                            |"
-echo "| Web Site: http://$ip/                      |"
-echo "| PhpMyAdmin: http://$ip/phpmyadmin          |"
-echo "| User: root || Pass: $pass                  |"
-echo "| Test PHP: http://$ip/info.php              |"
-echo "| Warning: Delete info.php for security      |"
+echo "|    Finish Auto Install and Setup LAMP"
+echo "|"
+echo "| Web Site: http://$ip/"
+echo "| PhpMyAdmin: http://$ip/phpmyadmin"
+echo "| User: root || Pass: $pass"
+echo "| Test PHP: http://$ip/info.php"
+echo "| Warning: Delete info.php for security"
 echo "+-------------------------------------------+"
