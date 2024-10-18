@@ -111,20 +111,14 @@ add_php_repository() {
   echo "+--------------------------------------+"
   echo "|     Adding PHP Repository            |"
   echo "+--------------------------------------+"
-
   # Get the OS details
   os_name=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
   os_version=$(lsb_release -cs)
 
   if [[ "$os_name" == "ubuntu" ]]; then
-    # Check if the Ubuntu version is unsupported, default to 'focal' if it is
-    if [[ "$os_version" == "oracular" || "$os_version" == "groovy" || "$os_version" == "hirsute" ]]; then
-      echo "Unsupported Ubuntu version detected: $os_version. Defaulting to 'focal' repository for PHP."
-      os_version="focal"
-    fi
-
     # Add PHP PPA for Ubuntu
-    sudo add-apt-repository "deb http://ppa.launchpad.net/ondrej/php/ubuntu $os_version main" -y
+    sudo apt install software-properties-common -y
+    sudo add-apt-repository ppa:ondrej/php -y
     sudo apt-get update
   elif [[ "$os_name" == "debian" ]]; then
     # Add PHP repository for Debian
@@ -135,6 +129,10 @@ add_php_repository() {
     echo "Unsupported OS: $os_name"
     exit 1
   fi
+
+  echo "+--------------------------------------+"
+  echo "|    PHP Repository Added Successfully |"
+  echo "+--------------------------------------+"
 }
 # Install PHP and the required extensions
 install_php() {
@@ -217,7 +215,7 @@ done
 
 
 # Add PHP repository to ensure the latest PHP versions are available
-# add_php_repository
+add_php_repository
 
 # Check if LAMP stack is already installed
 if is_lamp_installed; then
