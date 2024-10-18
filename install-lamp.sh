@@ -3,6 +3,13 @@
 # Base URL to download the scripts
 BASE_URL="https://raw.githubusercontent.com/rifrocket/LAMP-Auto-Installer/main"
 
+# Add the PHP repository to ensure PHP versions are available
+add_php_repository() {
+  echo "Adding PHP repository..."
+  sudo add-apt-repository -y ppa:ondrej/php
+  sudo apt-get update -qq
+}
+
 # Download the necessary files if they don't already exist
 download_files() {
   files=("utils.sh" "apache.sh" "mysql.sh" "php.sh" "phpmyadmin.sh")
@@ -29,19 +36,17 @@ load_scripts() {
   source ./phpmyadmin.sh
 }
 
-# Check for PHP versions and install the latest stable version if php8.2 is not available
-install_latest_php() {
-  local available_php_version=$(apt-cache search php | grep -oP 'php[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
-
-  if [ -n "$available_php_version" ]; then
-    echo "Installing PHP version $available_php_version..."
-    sudo apt-get install -y "$available_php_version" libapache2-mod-"$available_php_version" php"$available_php_version"-mysql php"$available_php_version"-curl > /dev/null 2>&1
-    sudo a2enmod "$available_php_version"
-    sudo systemctl restart apache2
-  else
-    echo "ERROR: No PHP version found in repositories!"
+# Install PHP and the required extensions
+install_php() {
+  local php_version=$1
+  echo "Installing PHP version $php_version..."
+  sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to install PHP $php_version."
     exit 1
   fi
+  sudo a2enmod php$php_version
+  sudo systemctl restart apache2
 }
 
 # Ensure proper permissions for PhpMyAdmin
@@ -73,6 +78,9 @@ download_files
 # Load the scripts
 load_scripts
 
+# Add PHP repository to ensure the latest PHP versions are available
+add_php_repository
+
 # Check if LAMP stack is already installed
 if is_lamp_installed; then
   echo "LAMP stack seems to be already installed. Do you want to reinstall? (y/n)"
@@ -96,7 +104,13 @@ if apt-cache search php8.2 | grep php8.2 > /dev/null; then
   install_php "8.2"
 else
   echo "PHP 8.2 not found, installing the latest available PHP version..."
-  install_latest_php
+  available_php_version=$(apt-cache search php | grep -oP 'php[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+  if [ -n "$available_php_version" ]; then
+    install_php "$available_php_version"
+  else
+    echo "ERROR: No PHP version found in repositories!"
+    exit 1
+  fi
 fi
 
 # Fix PhpMyAdmin access issues
