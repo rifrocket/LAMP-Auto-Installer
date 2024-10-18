@@ -32,10 +32,10 @@ wget --no-check-certificate -O /tmp/install-lamp.sh https://raw.githubuserconten
 
 ### Custom Password and PHP Versions
 
-You can set a custom MySQL root password and specify multiple PHP versions by passing the `-p` or `--password` and `-v` or `--php-versions` flags:
+You can set a custom MySQL root password and specify PHP version by passing the `-p` or `--password` and `-v` or `--php-version` flags:
 
 ```bash
-sudo bash install-lamp.sh -p MyCustomPassword123 -v 7.4,8.2
+sudo bash install-lamp.sh -p MyCustomPassword123 -v 8.2
 ```
 
 ### Optional Supervisor Installation

@@ -1,39 +1,110 @@
 #!/bin/bash
 
-# Base URL to download the scripts
-BASE_URL="https://raw.githubusercontent.com/rifrocket/LAMP-Auto-Installer/main"
+# Default values
+pass="testT8080"
+php_versions=("8.2")
+install_supervisor=false
+
+# Show help message
+show_help() {
+  echo "Usage: install-lamp.sh [options]"
+  echo "Options:"
+  echo "  -p, --password         Set MySQL root password (default: testT8080)"
+  echo "  -v, --php-versions     Install PHP versions (default: 8.2)"
+  echo "  --supervisor           Install Supervisor for process management (default: false)"
+  echo "  -h, --help             Show this help message"
+}
+
+
+# Get server IP
+get_server_ip() {
+  curl -s https://api.ipify.org
+}
+
+# Check if Apache, MySQL, and PHP are installed
+is_lamp_installed() {
+  apache_status=$(systemctl is-active apache2)
+  mysql_status=$(systemctl is-active mysql)
+  php_installed=$(php --version 2>/dev/null)
+
+  if [[ "$apache_status" == "active" && "$mysql_status" == "active" && -n "$php_installed" ]]; then
+    return 0  # LAMP is installed
+  else
+    return 1  # LAMP is not installed
+  fi
+}
+
+# Update system packages
+run_update() {
+  echo "Updating system packages..."
+  sudo apt-get update -qq
+  echo "+--------------------------------------+"
+  echo "|     system packages Updated          |"
+  echo "+--------------------------------------+"
+}
+
+install_apache() {
+  echo "Installing Apache..."
+  sudo apt-get install -y apache2 > /dev/null 2>&1
+  sudo ufw allow in "Apache Full"
+  sudo systemctl start apache2
+  sudo systemctl enable apache2
+  sudo apache2ctl configtest
+
+  sudo tee /var/www/html/index.html > /dev/null <<END
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <title>Welcome to Apache!</title>
+  </head>
+  <body>
+  <h1>Apache is installed!</h1>
+  <?php
+    phpinfo();
+  ?>
+  </body>
+  </html>
+END
+
+
+#check if apache2ctl configtest is successful
+if [ $? -ne 0 ]; then
+  echo "ERROR: Apache installation failed. Check the Apache configuration."
+  exit 1
+fi
+
+echo "+--------------------------------------+"
+echo "|     Apache Installed Successfully    |"
+echo "+--------------------------------------+"
+
+}
+
+# Install MySQL
+install_mysql() {
+  local pass=$1
+  echo "Installing MySQL..."
+  echo "mysql-server mysql-server/root_password password $pass" | sudo debconf-set-selections
+  echo "mysql-server mysql-server/root_password_again password $pass" | sudo debconf-set-selections
+  sudo apt-get install -y mysql-server > /dev/null 2>&1
+  sudo systemctl start mysql
+  sudo systemctl enable mysql
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to install MySQL."
+    exit 1
+  fi
+
+  echo "+--------------------------------------+"
+  echo "|    MySQL Installed Successfully      |"
+  echo "+--------------------------------------+"
+}
+
 
 # Add the PHP repository to ensure PHP versions are available
 add_php_repository() {
   echo "Adding PHP repository..."
   sudo add-apt-repository -y ppa:ondrej/php
   sudo apt-get update -qq
-}
-
-# Download the necessary files if they don't already exist
-download_files() {
-  files=("utils.sh" "apache.sh" "mysql.sh" "php.sh" "phpmyadmin.sh")
-
-  for file in "${files[@]}"; do
-    if [ ! -f "$file" ]; then
-      echo "Downloading $file..."
-      wget -q "$BASE_URL/$file" -O "$file"
-      if [ $? -ne 0 ]; then
-        echo "Failed to download $file. Exiting."
-        exit 1
-      fi
-      chmod +x "$file"
-    fi
-  done
-}
-
-# Load the downloaded scripts
-load_scripts() {
-  source ./utils.sh
-  source ./apache.sh
-  source ./mysql.sh
-  source ./php.sh
-  source ./phpmyadmin.sh
 }
 
 # Install PHP and the required extensions
@@ -47,19 +118,54 @@ install_php() {
   fi
   sudo a2enmod php$php_version
   sudo systemctl restart apache2
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to enable PHP $php_version module."
+    exit 1
+  fi
+
+  echo "+--------------------------------------+"
+  echo "|    PHP $php_version Installed        |"
+  echo "+--------------------------------------+"
 }
 
-# Ensure proper permissions for PhpMyAdmin
-fix_phpmyadmin_permissions() {
-  sudo chown -R www-data:www-data /usr/share/phpmyadmin
-  sudo chmod -R 755 /usr/share/phpmyadmin
-  echo "PhpMyAdmin permissions fixed."
+# Install PhpMyAdmin
+install_phpmyadmin() {
+  local pass=$1
+  echo "Installing PhpMyAdmin..."
+  echo "phpmyadmin phpmyadmin/dbconfig-install boolean false" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/mysql/admin-pass password $pass" | sudo debconf-set-selections
+  sudo apt-get install -y phpmyadmin php-mbstring php-gettext > /dev/null 2>&1
+  sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to install PhpMyAdmin."
+    exit 1
+  fi
+
+  echo "+--------------------------------------+"
+  echo "|    PhpMyAdmin Installed Successfully |"
+  echo "+--------------------------------------+"
 }
 
-# Default values
-pass="testT8080"
-php_versions=("8.2")
-install_supervisor=false
+
+# Install Supervisor
+install_supervisor() {
+  echo "Installing Supervisor..."
+  sudo apt-get install -y supervisor > /dev/null 2>&1
+  sudo systemctl start supervisor
+  sudo systemctl enable supervisor
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to install Supervisor."
+    exit 1
+  fi
+
+  echo "+--------------------------------------+"
+  echo "|  Supervisor Installed Successfully   |"
+  echo "+--------------------------------------+"
+}
+
 
 # Parse arguments
 while [ "$1" != "" ]; do
@@ -72,11 +178,8 @@ while [ "$1" != "" ]; do
   esac
 done
 
-# Download necessary files
-download_files
+# start the installation process
 
-# Load the scripts
-load_scripts
 
 # Add PHP repository to ensure the latest PHP versions are available
 add_php_repository
@@ -98,40 +201,30 @@ fi
 run_update
 install_apache
 install_mysql "$pass"
-
-# PHP Installation - Handle case where PHP 8.2 is not available
-if apt-cache search php8.2 | grep php8.2 > /dev/null; then
-  install_php "8.2"
-else
-  echo "PHP 8.2 not found, installing the latest available PHP version..."
-  available_php_version=$(apt-cache search php | grep -oP 'php[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
-  if [ -n "$available_php_version" ]; then
-    install_php "$available_php_version"
-  else
-    echo "ERROR: No PHP version found in repositories!"
-    exit 1
-  fi
-fi
-
-# Fix PhpMyAdmin access issues
-fix_phpmyadmin_permissions
-
-# Optional Supervisor installation
-if [ "$install_supervisor" = true ]; then
-  source ./supervisor.sh
-  install_supervisor_service
-fi
-
+install_php "$php_versions"
 install_phpmyadmin "$pass"
+
+# check if supervisor is to be installed
+if [ "$install_supervisor" = true ]; then
+  install_supervisor
+fi
+
+# Check if all components are installed
+if ! is_lamp_installed; then
+  echo "+--------------------------------------+"
+  echo "|     LAMP Installation Failed         |"
+  echo "+--------------------------------------+"
+  exit 1
+fi
 
 # Display completion message
 ip=$(get_server_ip)
 echo "+-------------------------------------------+"
 echo "|    Finish Auto Install and Setup LAMP      |"
-echo "|                                           |"
-echo "| Web Site: http://$ip/"
-echo "| PhpMyAdmin: http://$ip/phpmyadmin"
-echo "| User: root || Pass: $pass"
-echo "| Test PHP: http://$ip/info.php"
+echo "|                                            |"
+echo "| Web Site: http://$ip/                      |"
+echo "| PhpMyAdmin: http://$ip/phpmyadmin          |"
+echo "| User: root || Pass: $pass                  |"
+echo "| Test PHP: http://$ip/info.php              |"
 echo "| Warning: Delete info.php for security      |"
 echo "+-------------------------------------------+"
