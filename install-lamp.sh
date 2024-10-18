@@ -186,8 +186,17 @@ install_php() {
     echo "ERROR: Failed to install PHP $php_version."
     exit 1
   fi
+
+  # Set PHP $php_version as the default PHP version
+  sudo update-alternatives --set php /usr/bin/php$php_version
+  sudo update-alternatives --set phpize /usr/bin/phpize$php_version
+  sudo update-alternatives --set php-config /usr/bin/php-config$php_version
+
+
   sudo a2enmod php$php_version
   sudo systemctl restart apache2
+
+
 
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to enable PHP $php_version module."
