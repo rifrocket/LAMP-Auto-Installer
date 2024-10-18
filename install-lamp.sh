@@ -143,6 +143,7 @@ install_php() {
   echo "|     Installing PHP $php_version       |"
   echo "+--------------------------------------+"
   sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl > /dev/null 2>&1
+  sudo apt-get install -y php$php_version-mbstring php$php_version-zip php$php_version-gd php$php_version-common php$php_version-xml php$php_version-bcmath php$php_version-fpm > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install PHP $php_version."
     exit 1
