@@ -7,6 +7,9 @@ install_supervisor=false
 web_server="apache"
 
 # Show help message
+force_reinstall=false
+remove_lamp=false
+
 show_help() {
   echo "Usage: install-lamp.sh [options]"
   echo "Options:"
@@ -53,7 +56,7 @@ install_apache() {
   echo "+--------------------------------------+"
   sudo apt-get install -y apache2 > /dev/null 2>&1
   sudo ufw allow in "Apache Full"
-  sudo systemctl start apache2
+  sudo systemctl start apache2 || { echo "Failed to start Apache."; exit 1; }
   sudo systemctl enable apache2
   sudo apache2ctl configtest
 
@@ -97,7 +100,7 @@ install_nginx() {
     
     # Enable Nginx to start at boot and start it now
     sudo systemctl enable nginx
-    sudo systemctl start nginx
+    sudo systemctl start nginx || { echo "Failed to start Nginx."; exit 1; }
 
     # Install PHP and PHP-FPM
     sudo apt-get install -y php8.2-fpm php8.2-mbstring php8.2-xml php8.2-mysql
@@ -406,9 +409,18 @@ while [ "$1" != "" ]; do
     -v | --php-versions ) IFS=',' read -r -a php_versions <<< "$2"; shift 2;;
     --supervisor ) install_supervisor=true; shift;;
     -h | --help ) show_help; exit;;
+    --force-reinstall ) force_reinstall=true; shift;;
+    --remove ) remove_lamp=true; shift;;
     * ) echo "Unknown option: $1"; show_help; exit 1;;
   esac
 done
+
+# Remove LAMP stack if --remove flag is passed
+if [ "$remove_lamp" = true ]; then
+  echo "Removing LAMP stack..."
+  remove_existing_installation
+  exit 0
+fi
 
 # start the installation process
 
@@ -418,14 +430,12 @@ add_php_repository
 
 # Check if LAMP stack is already installed
 if is_lamp_installed; then
-  echo "LAMP stack seems to be already installed. Do you want to reinstall? (y/n)"
-  read -r choice
-  if [ "$choice" != "y" ]; then
-    echo "Aborting installation."
-    exit 1
-  else
-    echo "Removing existing LAMP stack..."
+  if [ "$force_reinstall" = true ]; then
+    echo "Forcing reinstallation..."
     remove_existing_installation
+  else
+    echo "LAMP stack seems to be already installed. Use --force-reinstall flag to reinstall or --remove to uninstall."
+    exit 1
   fi
 fi
 

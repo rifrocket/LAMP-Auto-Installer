@@ -3,13 +3,13 @@
 
 ## Overview
 
-This is a fully automated script to install and set up a **LAMP (Linux, Apache, MySQL, PHP)** stack on any DigitalOcean droplet or Ubuntu server. It also includes the installation of **phpMyAdmin** for database management and configuration of **Apache** and **PHP** (supporting multiple versions). This script is designed to make the process seamless and reduce manual intervention.
+This is a fully automated script to install and set up a **LAMP (Linux, Apache, MySQL, PHP)** stack on any DigitalOcean droplet or Ubuntu server. It also includes the installation of **phpMyAdmin** for database management and configuration of **Apache** and **PHP**. This script is designed to make the process seamless and reduce manual intervention.
 
 ## Features
 
 - **Apache Web Server**: Serves your web applications.
 - **MySQL Database**: Handles your database with secure installation.
-- **Multiple PHP Versions**: You can specify which PHP versions to install (default: 8.2).
+- **PHP Versions**: You can specify which PHP versions to install (default: 8.2).
 - **phpMyAdmin**: Database management tool accessible via browser.
 - **Optional Supervisor**: Install Supervisor for process management if required.
 - **Reinstallation Alert**: If LAMP stack is already installed, the script will prompt for reinstallation.
@@ -79,7 +79,7 @@ After the installation is complete, you can access your server’s LAMP stack vi
 1. **System Update**: The script updates your system’s package index.
 2. **Install Apache**: Installs and configures Apache web server.
 3. **Install MySQL**: Installs MySQL and secures it with automated responses.
-4. **Install Multiple PHP Versions**: Installs PHP versions (you can specify multiple versions).
+4. **Install  PHP Versions**: Installs PHP versions (you can specify version).
 5. **Configure PHP**: Updates PHP settings (e.g., timezone, max upload size).
 6. **Install PhpMyAdmin**: Sets up phpMyAdmin for database management.
 7. **Restart Services**: Automatically restarts Apache and PHP services to apply changes.
