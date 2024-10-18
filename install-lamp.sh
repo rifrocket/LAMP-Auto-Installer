@@ -167,20 +167,49 @@ install_phpmyadmin() {
   echo "+--------------------------------------+"
   echo "|     Installing PhpMyAdmin            |"
   echo "+--------------------------------------+"
-  echo "phpmyadmin phpmyadmin/dbconfig-install boolean false" | sudo debconf-set-selections
-  echo "phpmyadmin phpmyadmin/mysql/admin-pass password $pass" | sudo debconf-set-selections
-  sudo apt-get install -y phpmyadmin php-mbstring php-gettext > /dev/null 2>&1
-  sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
 
+  # Pre-configure debconf selections for non-interactive installation
+  echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/app-password-confirm password $pass" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/mysql/admin-pass password $pass" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/mysql/app-pass password $pass" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
+
+  # Install phpMyAdmin and required PHP extensions
+  sudo apt-get install -y phpmyadmin php-mbstring php-gettext
+
+  # Check if phpMyAdmin was successfully installed
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install PhpMyAdmin."
     exit 1
   fi
 
+  # Enable required PHP extensions for phpMyAdmin
+  sudo phpenmod mbstring
+  sudo phpenmod gettext
+
+  # Check if symbolic link exists and remove it if necessary
+  if [ -L /var/www/html/phpmyadmin ] || [ -d /var/www/html/phpmyadmin ]; then
+    echo "Existing phpMyAdmin directory or symlink found. Removing it..."
+    sudo rm -rf /var/www/html/phpmyadmin
+  fi
+
+  # Create a new symbolic link to phpMyAdmin
+  sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to create symbolic link for PhpMyAdmin."
+    exit 1
+  fi
+
+  # Restart Apache to apply changes
+  sudo systemctl restart apache2
+
   echo "+--------------------------------------+"
-  echo "|    PhpMyAdmin Installed Successfully |"
+  echo "|  PhpMyAdmin Installed Successfully   |"
   echo "+--------------------------------------+"
 }
+
 
 
 # Install Supervisor
@@ -204,9 +233,41 @@ install_supervisor() {
 
 # Remove existing LAMP stack
 remove_existing_installation() {
-  sudo apt-get purge -y apache2 mysql-server php phpmyadmin > /dev/null 2>&1
-  sudo apt-get autoremove -y > /dev/null 2>&1
-  sudo apt-get autoclean -y > /dev/null 2>&1
+  echo "+--------------------------------------+"
+  echo "|  Removing Existing LAMP Installation |"
+  echo "+--------------------------------------+"
+
+  # Stop Apache and MySQL services first to avoid issues during removal
+  sudo systemctl stop apache2 mysql
+
+  # Purge Apache, MySQL, PHP, and phpMyAdmin
+  sudo apt-get purge -y apache2 apache2-utils apache2-bin apache2.2-common
+  sudo apt-get purge -y mysql-server mysql-client mysql-common
+  sudo apt-get purge -y php* phpmyadmin
+
+  # Autoremove unnecessary dependencies and clean up apt cache
+  sudo apt-get autoremove -y
+  sudo apt-get autoclean -y
+
+  # Remove leftover configuration files and data directories
+  sudo rm -rf /etc/apache2
+  sudo rm -rf /etc/mysql
+  sudo rm -rf /etc/php
+  sudo rm -rf /etc/phpmyadmin
+
+  # Optionally remove MySQL databases (CAUTION: This will delete all your MySQL data)
+  sudo rm -rf /var/lib/mysql
+  sudo rm -rf /var/www/html
+  
+  # Clean up other residual files
+  sudo rm -rf /var/log/apache2
+  sudo rm -rf /var/log/mysql
+  sudo rm -rf /var/cache/apache2
+  sudo rm -rf /usr/share/phpmyadmin
+
+  echo "+--------------------------------------+"
+  echo "|   Existing Installation Removed      |"
+  echo "+--------------------------------------+"
 }
 
 # Parse arguments
