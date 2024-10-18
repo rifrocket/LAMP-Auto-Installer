@@ -128,6 +128,10 @@ echo "|             Installing PHP 8.2            |"
 echo "+-------------------------------------------+"
 sudo apt-get install -y php8.2 libapache2-mod-php8.2 php8.2-mysql php8.2-curl > /dev/null 2>&1
 
+# Enable PHP 8.2 module for Apache
+sudo a2enmod php8.2
+sudo systemctl restart apache2
+
 # Configure PHP 8.2 settings
 sudo sed -i 's/;date.timezone =/date.timezone = Europe\/Berlin/' /etc/php/8.2/apache2/php.ini
 sudo sed -i 's/max_execution_time = 30/max_execution_time = 300/' /etc/php/8.2/apache2/php.ini
