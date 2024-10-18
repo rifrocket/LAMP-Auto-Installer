@@ -36,7 +36,9 @@ is_lamp_installed() {
 
 # Update system packages
 run_update() {
-  echo "Updating system packages..."
+  echo "+--------------------------------------+"
+  echo "|     Updating system packages         |"
+  echo "+--------------------------------------+"
   sudo apt-get update -qq
   echo "+--------------------------------------+"
   echo "|     system packages Updated          |"
@@ -44,7 +46,9 @@ run_update() {
 }
 
 install_apache() {
-  echo "Installing Apache..."
+  echo "+--------------------------------------+"
+  echo "|     Installing Apache                |"
+  echo "+--------------------------------------+"
   sudo apt-get install -y apache2 > /dev/null 2>&1
   sudo ufw allow in "Apache Full"
   sudo systemctl start apache2
@@ -82,7 +86,9 @@ echo "+--------------------------------------+"
 # Install MySQL
 install_mysql() {
   local pass=$1
-  echo "Installing MySQL..."
+  echo "+--------------------------------------+"
+  echo "|     Installing MySQL                 |"
+  echo "+--------------------------------------+"
   echo "mysql-server mysql-server/root_password password $pass" | sudo debconf-set-selections
   echo "mysql-server mysql-server/root_password_again password $pass" | sudo debconf-set-selections
   sudo apt-get install -y mysql-server > /dev/null 2>&1
@@ -100,17 +106,34 @@ install_mysql() {
 }
 
 
-# Add the PHP repository to ensure PHP versions are available
+# Function to detect OS and add the appropriate PHP repository
 add_php_repository() {
-  echo "Adding PHP repository..."
-  sudo add-apt-repository -y ppa:ondrej/php
-  sudo apt-get update -qq
-}
+  # Get the OS details
+  os_name=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+  os_version=$(lsb_release -cs)
 
+  if [[ "$os_name" == "ubuntu" ]]; then
+    # Add PHP PPA for Ubuntu
+    echo "Detected Ubuntu. Adding PHP PPA for Ubuntu..."
+    sudo add-apt-repository ppa:ondrej/php -y
+    sudo apt-get update
+  elif [[ "$os_name" == "debian" ]]; then
+    # Add PHP repository for Debian
+    echo "Detected Debian. Adding PHP repository for Debian..."
+    sudo apt install -y apt-transport-https lsb-release ca-certificates curl
+    curl -fsSL https://packages.sury.org/php/README.txt | sudo bash -x
+    sudo apt-get update
+  else
+    echo "Unsupported OS: $os_name"
+    exit 1
+  fi
+}
 # Install PHP and the required extensions
 install_php() {
   local php_version=$1
-  echo "Installing PHP version $php_version..."
+  echo "+--------------------------------------+"
+  echo "|     Installing PHP $php_version       |"
+  echo "+--------------------------------------+"
   sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install PHP $php_version."
@@ -132,7 +155,9 @@ install_php() {
 # Install PhpMyAdmin
 install_phpmyadmin() {
   local pass=$1
-  echo "Installing PhpMyAdmin..."
+  echo "+--------------------------------------+"
+  echo "|     Installing PhpMyAdmin            |"
+  echo "+--------------------------------------+"
   echo "phpmyadmin phpmyadmin/dbconfig-install boolean false" | sudo debconf-set-selections
   echo "phpmyadmin phpmyadmin/mysql/admin-pass password $pass" | sudo debconf-set-selections
   sudo apt-get install -y phpmyadmin php-mbstring php-gettext > /dev/null 2>&1
@@ -151,7 +176,9 @@ install_phpmyadmin() {
 
 # Install Supervisor
 install_supervisor() {
-  echo "Installing Supervisor..."
+  echo "+--------------------------------------+"
+  echo "|     Installing Supervisor            |"
+  echo "+--------------------------------------+"
   sudo apt-get install -y supervisor > /dev/null 2>&1
   sudo systemctl start supervisor
   sudo systemctl enable supervisor
