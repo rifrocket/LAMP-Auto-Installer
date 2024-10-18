@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL to download the scripts
-BASE_URL="https://raw.githubusercontent.com/yourusername/LAMP-Auto-Installer/main"
+BASE_URL="https://raw.githubusercontent.com/rifrocket/LAMP-Auto-Installer/main"
 
 # Download the necessary files if they don't already exist
 download_files() {
