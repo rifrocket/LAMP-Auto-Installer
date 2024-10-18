@@ -142,7 +142,7 @@ install_php() {
   echo "+--------------------------------------+"
   echo "|     Installing PHP $php_version"
   echo "+--------------------------------------+"
-  sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl > /dev/null 2>&1
+  sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl php$php_version-gettext >  /dev/null 2>&1
   sudo apt-get install -y php$php_version-mbstring php$php_version-zip php$php_version-gd php$php_version-common php$php_version-xml php$php_version-bcmath php$php_version-fpm > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install PHP $php_version."
@@ -176,7 +176,7 @@ install_phpmyadmin() {
   echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
 
   # Install phpMyAdmin and required PHP extensions
-  sudo apt-get install -y phpmyadmin php-mbstring php-gettext
+  sudo apt-get install -y phpmyadmin
 
   # Check if phpMyAdmin was successfully installed
   if [ $? -ne 0 ]; then
