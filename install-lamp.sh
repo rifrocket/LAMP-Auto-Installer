@@ -5,7 +5,7 @@
 # Default values
 mysql_pass="testT8080"
 php_version="8.2"  # Default PHP version
-install_lamp=false
+install_lamp=true
 install_lemp=false
 install_composer=false
 install_supervisor=false
@@ -38,8 +38,8 @@ EOF
 # Parse arguments
 while [ "$1" != "" ]; do
   case "$1" in
-    --lamp ) install_lamp=true; shift ;;
-    --lemp ) install_lemp=true; shift ;;
+    --lamp ) install_lamp=true; install_lemp=false; shift ;;
+    --lemp ) install_lemp=true; install_lamp=false; shift ;;
     -p | --mysql-password ) mysql_pass="$2"; shift 2 ;;
     -v | --php-version ) php_version="$2"; shift 2 ;;
     -c | --composer ) install_composer=true; shift ;;
