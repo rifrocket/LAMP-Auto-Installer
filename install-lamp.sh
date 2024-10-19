@@ -472,13 +472,16 @@ remove_existing_installation() {
 
 
   if command -v apache2 > /dev/null 2>&1; then
+    sudo systemctl stop apache2
     sudo apt-get purge -y apache2
     if [ $? -ne 0 ]; then
       echo "ERROR: Failed to purge Apache."
       exit 1
     fi
     sudo rm -rf /etc/apache2
+
   elif command -v nginx > /dev/null 2>&1; then
+    sudo systemctl stop nginx
     sudo apt-get purge -y nginx
     if [ $? -ne 0 ]; then
       echo "ERROR: Failed to purge Nginx."
@@ -487,9 +490,10 @@ remove_existing_installation() {
     sudo rm -rf /etc/nginx
   fi 
 
-  # stop my sql
-  sudo systemctl stop mysql
+  
+  
   # Purge installed components
+  sudo systemctl stop mysql-server
   sudo apt-get purge -y mysql-server php* phpmyadmin
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to purge MySQL, PHP, or phpMyAdmin."
@@ -508,7 +512,7 @@ remove_existing_installation() {
     exit 1
   fi
 
-  sudo rm -rf /etc/mysql /etc/php /usr/share/phpmyadmin /var/www/html/index.html
+  sudo rm -rf  /etc/php /usr/share/phpmyadmin /var/www/html/index.html
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to remove directories."
     exit 1
