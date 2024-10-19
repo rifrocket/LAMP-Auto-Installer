@@ -41,7 +41,7 @@ show_help() {
 
 # Get server IP
 get_server_ip() {
-  curl -s https://api.ipify.org
+  curl -s https://api.ipify.org || echo "localhost"
 }
 
 # Check if Apache, MySQL, and PHP are installed
@@ -54,6 +54,18 @@ is_lamp_installed() {
     return 0  # LAMP is installed
   else
     return 1  # LAMP is not installed
+  fi
+}
+
+is_lemp_installed() {
+  nginx_status=$(systemctl is-active nginx)
+  mysql_status=$(systemctl is-active mysql)
+  php_installed=$(php --version 2>/dev/null)
+
+  if [[ "$nginx_status" == "active" && "$mysql_status" == "active" && -n "$php_installed" ]]; then
+    return 0  # LEMP is installed
+  else
+    return 1  # LEMP is not installed
   fi
 }
 
@@ -251,7 +263,6 @@ install_php() {
   echo "+--------------------------------------+"
 }
 
-
 # Install phpMyAdmin
 install_phpmyadmin() {
   local pass=$1
@@ -378,9 +389,9 @@ run_update
 
 # Install Web Server
 if [[ "$install_lamp" = true ]] || [[ "$install_lemp" = true ]]; then
-  if [[ "$web_server" == "apache" ]] || [[ "$install_lamp" = true ]]; then
+  if [[ "$web_server" == "apache" ]]; then
     install_apache
-  elif [[ "$web_server" == "nginx" ]] || [[ "$install_lemp" = true ]]; then
+  elif [[ "$web_server" == "nginx" ]]; then
     install_nginx
   else
     echo "Unsupported web server: $web_server. Use 'apache' or 'nginx'."
@@ -411,19 +422,15 @@ if [ "$install_supervisor" = true ]; then
 fi
 
 # Check if all components are installed
-if ! is_lamp_installed; then
+if ! is_lamp_installed && ! is_lemp_installed; then
   echo "+--------------------------------------+"
-  echo "|     LAMP Installation Failed         |"
+  echo "|     LAMP or LEMP Installation Failed |"
   echo "+--------------------------------------+"
   exit 1
 fi
 
 # Display completion message
 ip=$(get_server_ip)
-if(ip == "")
-then
-  ip="localhost"
-fi
 echo "+-------------------------------------------+"
 echo "|    Finish Auto Install and Setup LAMP    |"
 echo "| Web Site: http://$ip/                    |"
