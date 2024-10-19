@@ -222,10 +222,7 @@ if command -v apache2 > /dev/null; then
   sudo systemctl restart apache2
 elif command -v nginx > /dev/null; then
   sudo systemctl restart php$php_version-fpm
-# else
-#   echo "No supported web server (Apache or Nginx) is installed."
-#   exit 1
-# fi
+fi
 
   echo "+--------------------------------------+"
   echo "|    PHP $php_version Installed       |"
