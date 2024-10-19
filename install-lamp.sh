@@ -151,7 +151,7 @@ if [[ "$install_lemp" = true ]]; then
   install_nginx
   install_mysql "$mysql_pass"
   install_php "${php_versions[0]}"
-}
+fi
 
 log "+--------------------------------------+"
 log "|     Installation complete            |"
