@@ -557,7 +557,7 @@ if $install_supervisor; then
 fi
 
   # check if LEMP stack is installed
-  if is_lemp_installed && [ "$remove_web_server" = false ]; then
+  if (is_lemp_installed || is_lamp_installed) && [ "$remove_web_server" = false ]; then
     if [ "$install_lemp" = true ]; then
       DisplayCompletionMessage "LEMP"
     else
