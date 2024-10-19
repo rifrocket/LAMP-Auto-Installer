@@ -366,8 +366,8 @@ while [ "$1" != "" ]; do
     --phpmyadmin ) install_phpmyadmin=true; shift;;
     --phpmyadmin-password ) install_phpmyadmin_pass=$2; shift 2;;
     --supervisor ) install_supervisor=true; shift;;
-    --lamp ) install_lamp=true; shift;;
-    --lemp ) install_lemp=true; shift;;
+    --lamp ) install_lamp=true; web_server="apache"; shift;;
+    --lemp ) install_lemp=true; web_server="nginx"; shift;;
     --composer ) install_composer=true; shift;;
     --remove ) remove_lamp=true; shift;;
     -h | --help ) show_help; exit;;
