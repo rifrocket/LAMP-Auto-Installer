@@ -56,6 +56,34 @@ get_server_ip() {
   curl -s https://api.ipify.org || echo "localhost"
 }
 
+# Check OS compatibility and root privileges
+check_requirements() {
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "ERROR: Please run this script with sudo or as root."
+    exit 1
+  fi
+
+  if ! command -v lsb_release > /dev/null; then
+    echo "ERROR: lsb_release command not found. This script only supports Ubuntu and Debian."
+    exit 1
+  fi
+
+  os_name=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+  if [[ "$os_name" != "ubuntu" && "$os_name" != "debian" ]]; then
+    echo "ERROR: This script only supports Ubuntu and Debian."
+    exit 1
+  fi
+
+  if [[ "$os_name" == "ubuntu" ]]; then
+    os_version=$(lsb_release -rs)
+    if (( $(echo "$os_version < 22.04" | bc -l) )); then
+      echo "ERROR: This script requires Ubuntu 22.04 or higher."
+      exit 1
+    fi
+  fi
+}
+
+
 # Check if Apache, MySQL, and PHP are installed
 is_lamp_installed() {
   apache_status=$(systemctl is-active apache2)
@@ -486,6 +514,7 @@ if $remove_web_server; then
 fi
 
 if $install_lamp; then
+  check_requirements
   install_php $php_version
   install_apache
   install_mysql $mysql_pass
@@ -493,6 +522,7 @@ if $install_lamp; then
 fi
 
 if $install_lemp; then  
+  check_requirements
   install_php $php_version
   install_nginx
   install_mysql $mysql_pass
