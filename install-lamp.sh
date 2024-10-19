@@ -157,6 +157,7 @@ add_php_repository() {
 
 # Install PHP and required extensions
 install_php() {
+  local php_version=$1
   echo "+--------------------------------------+"
   echo "|     Installing PHP $php_version      |"
   echo "+--------------------------------------+"
