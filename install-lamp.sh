@@ -217,12 +217,15 @@ install_php() {
   sudo update-alternatives --set phpize /usr/bin/phpize$php_version
   sudo update-alternatives --set php-config /usr/bin/php-config$php_version
 
-  if [ "$web_server" == "apache" ]; then
-    sudo a2enmod php$php_version
-    sudo systemctl restart apache2
-  elif [ "$web_server" == "nginx" ]; then
-    sudo systemctl restart php$php_version-fpm
-  fi
+if command -v apache2 > /dev/null; then
+  sudo a2enmod php$php_version
+  sudo systemctl restart apache2
+elif command -v nginx > /dev/null; then
+  sudo systemctl restart php$php_version-fpm
+# else
+#   echo "No supported web server (Apache or Nginx) is installed."
+#   exit 1
+# fi
 
   echo "+--------------------------------------+"
   echo "|    PHP $php_version Installed       |"
