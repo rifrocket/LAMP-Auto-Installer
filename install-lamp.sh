@@ -512,7 +512,6 @@ remove_existing_installation() {
     exit 1
   fi
 
-  sudo rm -rf  /etc/php /usr/share/phpmyadmin /var/www/html/index.html
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to remove directories."
     exit 1
