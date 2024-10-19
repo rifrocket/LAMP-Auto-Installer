@@ -356,10 +356,10 @@ fi
 run_update
 
 # Install Web Server
-if [ "$install_lamp" = true ] || [ "$install_lemp" = true ]; then
-  if [[ "$web_server" == "apache" ] || [ "$install_lamp" = true ]]; then
+if [[ "$install_lamp" = true ]] || [[ "$install_lemp" = true ]]; then
+  if [[ "$web_server" == "apache" ]] || [[ "$install_lamp" = true ]]; then
     install_apache
-  elif [[ "$web_server" == "nginx" ] || [ "$install_lemp" = true ]]; then
+  elif [[ "$web_server" == "nginx" ]] || [[ "$install_lemp" = true ]]; then
     install_nginx
   else
     echo "Unsupported web server: $web_server. Use 'apache' or 'nginx'."
