@@ -529,30 +529,20 @@ if $remove_web_server; then
   remove_existing_installation
 fi
 
-if $install_lamp; then
+if [ "$install_lamp" = true ] && [ "$remove_web_server" = false ]; then
   check_requirements
   install_php $php_version
   install_apache
   install_mysql $mysql_pass
   install_phpmyadmin $mysql_pass
-
-  # check if LAMP stack is installed
-  if is_lamp_installed; then
-    DisplayCompletionMessage "LAMP"
-  fi
 fi
 
-if $install_lemp; then  
+if [ "$install_lemp" = true ] && [ "$remove_web_server" = false ]; then
   check_requirements
   install_php $php_version
   install_nginx
   install_mysql $mysql_pass
   install_phpmyadmin $mysql_pass
-
-  # check if LEMP stack is installed
-  if is_lemp_installed; then
-    DisplayCompletionMessage "LEMP"
-  fi
 fi
 
 if $install_composer; then
@@ -562,6 +552,15 @@ fi
 if $install_supervisor; then
   install_supervisor
 fi
+
+  # check if LEMP stack is installed
+  if is_lemp_installed && [ "$remove_web_server" = false ]; then
+    if [ "$install_lemp" = true ]; then
+      DisplayCompletionMessage "LEMP"
+    else
+      DisplayCompletionMessage "LAMP"
+    fi
+  fi
 
 
 
