@@ -55,7 +55,18 @@ done
 get_server_ip() {
   curl -s https://api.ipify.org || echo "localhost"
 }
-
+# Display completion message
+DisplayCompletionMessage() {
+  ip=$(get_server_ip)
+  local stack=$1
+  echo "+-------------------------------------------+"
+  echo "|    $stack Stack Installed Successfully    |"
+  echo "+-------------------------------------------+"
+  echo "| Web Site: http://$ip/                "
+  echo "| PhpMyAdmin: http://$ip/phpmyadmin    "
+  echo "| User: root || Pass: $mysql_pass            "
+  echo "+-------------------------------------------+"
+}
 # Check OS compatibility and root privileges
 check_requirements() {
   if [ "$(id -u)" -ne 0 ]; then
@@ -542,6 +553,11 @@ if $install_lamp; then
   install_apache
   install_mysql $mysql_pass
   install_phpmyadmin $mysql_pass
+
+  # check if LAMP stack is installed
+  if is_lamp_installed; then
+    DisplayCompletionMessage "LAMP"
+  fi
 fi
 
 if $install_lemp; then  
@@ -550,6 +566,11 @@ if $install_lemp; then
   install_nginx
   install_mysql $mysql_pass
   install_phpmyadmin $mysql_pass
+
+  # check if LEMP stack is installed
+  if is_lemp_installed; then
+    DisplayCompletionMessage "LEMP"
+  fi
 fi
 
 if $install_composer; then
@@ -563,11 +584,4 @@ fi
 
 
 
-# Display completion message
-ip=$(get_server_ip)
-echo "+-------------------------------------------+"
-echo "|    Finish Auto Install and Setup LAMP"
-echo "| Web Site: http://$ip/                "
-echo "| PhpMyAdmin: http://$ip/phpmyadmin    "
-echo "| User: root || Pass: $mysql_pass            "
-echo "+-------------------------------------------+"
+
