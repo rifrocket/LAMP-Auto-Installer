@@ -470,36 +470,84 @@ remove_existing_installation() {
   echo "|  Removing Existing Web Server Installation |"
   echo "+--------------------------------------------+"
 
-
+  # Stop and purge Apache if installed
   if command -v apache2 > /dev/null 2>&1; then
     sudo systemctl stop apache2
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to stop Apache."
+      exit 1
+    fi
+
     sudo apt-get purge -y apache2
     if [ $? -ne 0 ]; then
       echo "ERROR: Failed to purge Apache."
       exit 1
     fi
-    sudo rm -rf /etc/apache2
 
-  elif command -v nginx > /dev/null 2>&1; then
+    sudo rm -rf /etc/apache2
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to remove Apache configuration."
+      exit 1
+    fi
+  fi
+
+  # Stop and purge Nginx if installed
+  if command -v nginx > /dev/null 2>&1; then
     sudo systemctl stop nginx
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to stop Nginx."
+      exit 1
+    fi
+
     sudo apt-get purge -y nginx
     if [ $? -ne 0 ]; then
       echo "ERROR: Failed to purge Nginx."
       exit 1
     fi
-    sudo rm -rf /etc/nginx
-  fi 
 
-  
-  
-  # Purge installed components
-  sudo systemctl stop mysql-server
-  sudo apt-get purge -y mysql-server php* phpmyadmin
+    sudo rm -rf /etc/nginx
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to remove Nginx configuration."
+      exit 1
+    fi
+  fi
+
+  # Stop and purge MySQL if installed
+  if command -v mysql > /dev/null 2>&1; then
+    sudo systemctl stop mysql
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to stop MySQL."
+      exit 1
+    fi
+
+    sudo apt-get purge -y mysql-server
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to purge MySQL."
+      exit 1
+    fi
+
+    sudo rm -rf /etc/mysql
+    if [ $? -ne 0 ]; then
+      echo "ERROR: Failed to remove MySQL configuration."
+      exit 1
+    fi
+  fi
+
+  # Purge PHP and phpMyAdmin
+  sudo apt-get purge -y php* phpmyadmin
   if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to purge MySQL, PHP, or phpMyAdmin."
+    echo "ERROR: Failed to purge PHP or phpMyAdmin."
     exit 1
   fi
 
+  # Remove additional files
+  sudo rm -rf /usr/share/phpmyadmin /var/www/html/index.html
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to remove additional files."
+    exit 1
+  fi
+
+  # Clean up
   sudo apt-get autoremove -y
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to autoremove packages."
@@ -512,16 +560,10 @@ remove_existing_installation() {
     exit 1
   fi
 
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to remove directories."
-    exit 1
-  fi
-
   echo "+--------------------------------------+"
   echo "|   Existing Installation Removed      |"
   echo "+--------------------------------------+"
 }
-
 
 
 
