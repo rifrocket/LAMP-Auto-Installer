@@ -1,8 +1,10 @@
 #!/bin/bash
 
+#!/bin/bash
+
 # Default values
 mysql_pass="testT8080"
-php_versions=("8.2")
+php_version="8.2"  # Default PHP version
 install_lamp=false
 install_lemp=false
 install_composer=false
@@ -19,15 +21,15 @@ Options:
   --lemp                    Install LEMP stack (Nginx, MySQL, PHP)
   
 Customization Options:
-  -p, --mysql-password          Set MySQL root password (default: testT8080)
-  -v, --php-version             Specify PHP version(s) to install (default: 8.2, multiple versions comma-separated)
-  -s, --supervisor              Install Supervisor (default: false, use flag to enable)
-  -c, --composer                Install Composer (default: false, use flag to enable)
-  -r, --remove                  Remove existing LAMP or LEMP stack (default: false, use flag to enable)
-  -h, --help                    Show this help message
+  -p, --mysql-password       Set MySQL root password (default: testT8080)
+  -v, --php-version          Specify PHP version to install (default: 8.2)
+  -s, --supervisor           Install Supervisor (default: false)
+  -c, --composer             Install Composer (default: false)
+  -r, --remove               Remove existing LAMP or LEMP stack
+  -h, --help                 Show this help message
 
 Examples:
-  ./install-lamp.sh --lamp
+  ./install-lamp.sh --lamp --php-version=8.2
   ./install-lamp.sh --lemp --php-version=8.2 --mysql-password=mysecurepassword
   
 EOF
@@ -39,7 +41,7 @@ while [ "$1" != "" ]; do
     --lamp ) install_lamp=true; shift ;;
     --lemp ) install_lemp=true; shift ;;
     -p | --mysql-password ) mysql_pass="$2"; shift 2 ;;
-    -v | --php-version ) php_versions="$2"; shift 2 ;;
+    -v | --php-version ) php_version="$2"; shift 2 ;;
     -c | --composer ) install_composer=true; shift ;;
     -s | --supervisor ) install_supervisor=true; shift ;;
     -r | --remove ) remove_web_server=true; shift ;;
@@ -47,6 +49,7 @@ while [ "$1" != "" ]; do
     * ) echo "Unknown option: $1"; show_help; exit 1 ;;
   esac
 done
+
 
 # Get server IP
 get_server_ip() {
@@ -154,55 +157,44 @@ add_php_repository() {
 
 # Install PHP and required extensions
 install_php() {
-  local php_version=$1
   echo "+--------------------------------------+"
   echo "|     Installing PHP $php_version      |"
   echo "+--------------------------------------+"
 
   # Add the PHP repository before installation
   add_php_repository
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to add PHP repository."
-    exit 1
-  fi
-  
-  # Install PHP and required extensions
+
   sudo apt-get install -y \
-    unzip \
-    openssl \
     php$php_version \
     libapache2-mod-php$php_version \
     php$php_version-mysql \
-    php$php_version-curl \
     php$php_version-cli \
-    php$php_version-gettext \
-    php$php_version-mbstring \
     php$php_version-zip \
     php$php_version-gd \
     php$php_version-common \
     php$php_version-xml \
     php$php_version-bcmath \
     php$php_version-tokenizer \
-    php$php_version-json \
-    php$php_version-fpm > /dev/null 2>&1
+    php$php_version-mbstring
 
-  # Check if installation was successful
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to install PHP $php_version."
-    exit 1
-  fi
-
-  # Set PHP version as default
-  sudo update-alternatives --set php /usr/bin/php$php_version \
-    && sudo update-alternatives --set phpize /usr/bin/phpize$php_version \
-    && sudo update-alternatives --set php-config /usr/bin/php-config$php_version
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to set PHP $php_version as default."
-    exit 1
-  fi
-
+  sudo update-alternatives --set php /usr/bin/php$php_version
   echo "+--------------------------------------+"
-  echo "|    PHP $php_version Installed       |"
+  echo "|    PHP $php_version Installed        |"
+  echo "+--------------------------------------+"
+}
+
+install_phpmyadmin() {
+  echo "+--------------------------------------+"
+  echo "|     Installing phpMyAdmin            |"
+  echo "+--------------------------------------+"
+
+  sudo apt-get install -y phpmyadmin
+
+  sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+  sudo phpenmod mbstring
+  sudo systemctl restart apache2
+  echo "+--------------------------------------+"
+  echo "|  PhpMyAdmin Installed Successfully   |"
   echo "+--------------------------------------+"
 }
 
