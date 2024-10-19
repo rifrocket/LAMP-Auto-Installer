@@ -552,10 +552,8 @@ fix_dpkg_error() {
 }
 
 # Call the function to fix dpkg error before proceeding with any installation
-fix_dpkg_error
+# fix_dpkg_error
 
-# Call the function to fix dpkg error before proceeding with any installation
-fix_dpkg_error
 
 # Run the installation steps
 update_system
