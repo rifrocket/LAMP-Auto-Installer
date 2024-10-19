@@ -519,40 +519,7 @@ remove_existing_installation() {
   echo "+--------------------------------------+"
 }
 
-# Fix dpkg error
-fix_dpkg_error() {
-  echo "+--------------------------------------+"
-  echo "|     Fixing dpkg Error                |"
-  echo "+--------------------------------------+"
 
-  # Create the missing mysql.cnf file
-  sudo touch /etc/mysql/mysql.cnf
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to create /etc/mysql/mysql.cnf."
-    exit 1
-  fi
-
-  sudo apt-get clean
-  sudo apt-get autoremove -y
-  sudo dpkg --configure -a
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to reconfigure dpkg."
-    exit 1
-  fi
-
-  sudo apt-get install -f
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to fix broken dependencies."
-    exit 1
-  fi
-
-  echo "+--------------------------------------+"
-  echo "|  dpkg Error Fixed                    |"
-  echo "+--------------------------------------+"
-}
-
-# Call the function to fix dpkg error before proceeding with any installation
-# fix_dpkg_error
 
 
 # Run the installation steps
