@@ -470,6 +470,7 @@ remove_existing_installation() {
   echo "|  Removing Existing Web Server Installation |"
   echo "+--------------------------------------------+"
 
+
   if command -v apache2 > /dev/null 2>&1; then
     sudo apt-get purge -y apache2
     if [ $? -ne 0 ]; then
@@ -486,6 +487,8 @@ remove_existing_installation() {
     sudo rm -rf /etc/nginx
   fi 
 
+  # stop my sql
+  sudo systemctl stop mysql
   # Purge installed components
   sudo apt-get purge -y mysql-server php* phpmyadmin
   if [ $? -ne 0 ]; then
