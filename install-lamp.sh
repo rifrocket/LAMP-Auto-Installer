@@ -493,20 +493,14 @@ if $remove_web_server; then
 fi
 
 if $install_lamp; then
-  for php_version in ${php_versions//,/ }; do
-    install_php $php_version
-  done
-
+  install_php $php_version
   install_apache
   install_mysql $mysql_pass
   install_phpmyadmin $mysql_pass
 fi
 
-if $install_lemp; then
-  for php_version in ${php_versions//,/ }; do
-    install_php $php_version
-  done
-
+if $install_lemp; then  
+  install_php $php_version
   install_nginx
   install_mysql $mysql_pass
   install_phpmyadmin $mysql_pass
