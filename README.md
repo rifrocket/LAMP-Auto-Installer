@@ -28,7 +28,7 @@ This is a fully automated script to install and set up a **LAMP (Linux, Apache, 
 Run the following one-liner on your server to automatically download and execute the script:
 
 ```bash
-wget --no-check-certificate -O /tmp/install-lamp.sh https://raw.githubusercontent.com/rifrocket/LAMP-Auto-Installer/main/install-lamp.sh; sudo bash /tmp/install-lamp.sh
+wget --no-check-certificate -O /tmp/install-lamp.sh https://raw.githubusercontent.com/rifrocket/LAMP-Auto-Installer/main/install-lamp.sh; sudo bash /tmp/install-lamp.sh --composer
 ```
 
 ### Custom Password and PHP Versions
