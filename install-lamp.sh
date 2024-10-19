@@ -13,6 +13,7 @@ force_reinstall=false
 remove_lamp=false
 install_lamp=false
 install_lemp=false
+install_composer=false
 
 # Show help message
 show_help() {
@@ -28,6 +29,7 @@ show_help() {
   printf "  --phpmyadmin              Install phpMyAdmin (default: false, use flag to enable)\n"
   printf "  --phpmyadmin-password     Set phpMyAdmin password (default: testT8080)\n"
   printf "  --supervisor              Install Supervisor (default: false, use flag to enable)\n"
+  printf "  --composer                Install Composer (default: false, use flag to enable)\n"
   printf "  --remove                  Remove existing LAMP or LEMP stack (default: false, use flag to enable)\n"
   printf "  -h, --help                Show this help message\n"
   printf "\nExamples:\n\n"
@@ -203,10 +205,26 @@ install_php() {
   echo "+--------------------------------------+"
   echo "|     Installing PHP $php_version      |"
   echo "+--------------------------------------+"
-  add_php_repository
-  sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl php$php_version-gettext > /dev/null 2>&1
-  sudo apt-get install -y php$php_version-mbstring php$php_version-zip php$php_version-gd php$php_version-common php$php_version-xml php$php_version-bcmath php$php_version-fpm > /dev/null 2>&1
 
+  # Add the PHP repository before installation
+  add_php_repository
+  
+  # Install PHP and required extensions
+  sudo apt-get install -y \
+    php$php_version \
+    libapache2-mod-php$php_version \
+    php$php_version-mysql \
+    php$php_version-curl \
+    php$php_version-gettext \
+    php$php_version-mbstring \
+    php$php_version-zip \
+    php$php_version-gd \
+    php$php_version-common \
+    php$php_version-xml \
+    php$php_version-bcmath \
+    php$php_version-fpm > /dev/null 2>&1
+
+  # Check if installation was successful
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install PHP $php_version."
     exit 1
@@ -217,17 +235,22 @@ install_php() {
   sudo update-alternatives --set phpize /usr/bin/phpize$php_version
   sudo update-alternatives --set php-config /usr/bin/php-config$php_version
 
+  # Enable PHP module and restart services based on the web server
   if command -v apache2 > /dev/null 2>&1; then
     sudo a2enmod php$php_version
     sudo systemctl restart apache2
   elif command -v nginx > /dev/null 2>&1; then
     sudo systemctl restart php$php_version-fpm
+  else
+    echo "ERROR: Neither Apache nor Nginx is installed. Please install a web server."
+    exit 1
   fi
 
   echo "+--------------------------------------+"
   echo "|    PHP $php_version Installed       |"
   echo "+--------------------------------------+"
 }
+
 
 # Install phpMyAdmin
 install_phpmyadmin() {
@@ -325,6 +348,7 @@ while [ "$1" != "" ]; do
     --supervisor ) install_supervisor=true; shift;;
     --lamp ) install_lamp=true; shift;;
     --lemp ) install_lemp=true; shift;;
+    --composer ) install_composer=true; shift;;
     --remove ) remove_lamp=true; shift;;
     -h | --help ) show_help; exit;;
     * ) echo "Unknown option: $1"; show_help; exit 1;;
