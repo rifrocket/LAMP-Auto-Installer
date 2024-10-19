@@ -203,7 +203,7 @@ install_php() {
   echo "+--------------------------------------+"
   echo "|     Installing PHP $php_version      |"
   echo "+--------------------------------------+"
-
+  add_php_repository
   sudo apt-get install -y php$php_version libapache2-mod-php$php_version php$php_version-mysql php$php_version-curl php$php_version-gettext > /dev/null 2>&1
   sudo apt-get install -y php$php_version-mbstring php$php_version-zip php$php_version-gd php$php_version-common php$php_version-xml php$php_version-bcmath php$php_version-fpm > /dev/null 2>&1
 
