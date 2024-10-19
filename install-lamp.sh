@@ -195,17 +195,26 @@ add_php_repository() {
   os_version=$(lsb_release -cs)
 
   if [[ "$os_name" == "ubuntu" ]]; then
-    sudo apt install software-properties-common -y
-    sudo add-apt-repository ppa:ondrej/php -y
+    if ! grep -q "^deb .*$os_version.*ondrej/php" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
+      sudo apt install software-properties-common -y
+      sudo add-apt-repository ppa:ondrej/php -y
+      sudo apt-get update
+    else
+      echo "PHP repository already added. Skipping..."
+    fi
   elif [[ "$os_name" == "debian" ]]; then
-    sudo apt install -y apt-transport-https lsb-release ca-certificates curl
-    curl -fsSL https://packages.sury.org/php/README.txt | sudo bash -x
+    if ! grep -q "^deb .*$os_version.*sury.org" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
+      sudo apt install -y apt-transport-https lsb-release ca-certificates curl
+      curl -fsSL https://packages.sury.org/php/README.txt | sudo bash -x
+      sudo apt-get update
+    else
+      echo "PHP repository already added. Skipping..."
+    fi
   else
     echo "Unsupported OS: $os_name"
     exit 1
   fi
 
-  sudo apt-get update
   echo "+--------------------------------------+"
   echo "|    PHP Repository Added Successfully |"
   echo "+--------------------------------------+"
