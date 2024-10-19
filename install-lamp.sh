@@ -42,9 +42,9 @@ log() {
 
 # Pre-check if required tools are installed
 check_prerequisites() {
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|  Checking Required Tools             |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   
   required_tools=("curl" "debconf" "add-apt-repository")
   for tool in "${required_tools[@]}"; do
@@ -54,9 +54,9 @@ check_prerequisites() {
     fi
   done
   
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|  All Required Tools Are Available    |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
 }
 
 # Parse arguments
@@ -82,32 +82,45 @@ get_server_ip() {
 
 # Update system packages
 update_system() {
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|     Updating system packages         |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   sudo apt-get update -qq
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|     System packages updated          |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
 }
 
 # Install PHP and required extensions
 install_php() {
   local php_version=$1
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|     Installing PHP $php_version      |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
 
-  sudo apt-get install -y     unzip     openssl     php$php_version     libapache2-mod-php$php_version     php$php_version-mysql     php$php_version-curl     php$php_version-cli     php$php_version-mbstring     php$php_version-zip     php$php_version-xml     php$php_version-bcmath     php$php_version-json     php$php_version-fpm
+  sudo apt-get install -y \
+    unzip \
+    openssl \
+    php$php_version \
+    libapache2-mod-php$php_version \
+    php$php_version-mysql \
+    php$php_version-curl \
+    php$php_version-cli \
+    php$php_version-mbstring \
+    php$php_version-zip \
+    php$php_version-xml \
+    php$php_version-bcmath \
+    php$php_version-json \
+    php$php_version-fpm
 
   sudo update-alternatives --set php /usr/bin/php$php_version
 }
 
 # Install Apache
 install_apache() {
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|     Installing Apache                |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   sudo apt-get install -y apache2
   sudo ufw allow in "Apache Full"
   sudo systemctl start apache2
@@ -116,9 +129,9 @@ install_apache() {
 
 # Install Nginx
 install_nginx() {
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|     Installing Nginx                 |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   sudo apt-get install -y nginx
   sudo ufw allow 'Nginx Full'
   sudo systemctl enable nginx
@@ -128,12 +141,31 @@ install_nginx() {
 # Install MySQL
 install_mysql() {
   local pass=$1
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   log "|     Installing MySQL                 |"
-  log "+--------------------------------------+"
+  log "+--------------------------------------+" 
   echo "mysql-server mysql-server/root_password password $pass" | sudo debconf-set-selections
   echo "mysql-server mysql-server/root_password_again password $pass" | sudo debconf-set-selections
   sudo apt-get install -y mysql-server
+}
+
+# Install Supervisor
+install_supervisor() {
+  log "+--------------------------------------+" 
+  log "|     Installing Supervisor            |"
+  log "+--------------------------------------+" 
+  sudo apt-get install -y supervisor
+  sudo systemctl enable supervisor
+  sudo systemctl start supervisor
+}
+
+# Install Composer
+install_composer() {
+  log "+--------------------------------------+" 
+  log "|     Installing Composer              |"
+  log "+--------------------------------------+" 
+  curl -sS https://getcomposer.org/installer | php
+  sudo mv composer.phar /usr/local/bin/composer
 }
 
 # Main script starts here
@@ -153,6 +185,16 @@ if [[ "$install_lemp" = true ]]; then
   install_php "${php_versions[0]}"
 fi
 
-log "+--------------------------------------+"
+# Install Supervisor if requested
+if [[ "$install_supervisor" = true ]]; then
+  install_supervisor
+fi
+
+# Install Composer if requested
+if [[ "$install_composer" = true ]]; then
+  install_composer
+fi
+
+log "+--------------------------------------+" 
 log "|     Installation complete            |"
-log "+--------------------------------------+"
+log "+--------------------------------------+" 
