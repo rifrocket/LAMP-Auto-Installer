@@ -217,12 +217,12 @@ install_php() {
   sudo update-alternatives --set phpize /usr/bin/phpize$php_version
   sudo update-alternatives --set php-config /usr/bin/php-config$php_version
 
-if command -v apache2 > /dev/null; then
-  sudo a2enmod php$php_version
-  sudo systemctl restart apache2
-elif command -v nginx > /dev/null; then
-  sudo systemctl restart php$php_version-fpm
-fi
+  if command -v apache2 > /dev/null 2>&1; then
+    sudo a2enmod php$php_version
+    sudo systemctl restart apache2
+  elif command -v nginx > /dev/null 2>&1; then
+    sudo systemctl restart php$php_version-fpm
+  fi
 
   echo "+--------------------------------------+"
   echo "|    PHP $php_version Installed       |"
