@@ -323,7 +323,7 @@ install_mysql() {
   echo "mysql-server mysql-server/root_password password $pass" | sudo debconf-set-selections
   echo "mysql-server mysql-server/root_password_again password $pass" | sudo debconf-set-selections
 
-  sudo apt-get install -y mysql-server > /dev/null 2>&1
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install MySQL."
     exit 1
@@ -357,7 +357,7 @@ install_phpmyadmin() {
   echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
 
   # Install phpMyAdmin
-  sudo apt-get install -y phpmyadmin
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y phpmyadmin
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install PhpMyAdmin."
     exit 1
