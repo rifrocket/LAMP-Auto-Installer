@@ -478,7 +478,7 @@ remove_existing_installation() {
       exit 1
     fi
 
-    sudo apt-get purge -y apache2
+    sudo apt-get purge -y apache2 apache2-utils apache2.2-bin
     if [ $? -ne 0 ]; then
       echo "ERROR: Failed to purge Apache."
       exit 1
@@ -520,7 +520,7 @@ remove_existing_installation() {
       exit 1
     fi
 
-    sudo apt-get purge -y mysql-server
+    sudo apt-get purge -y mysql-server mysql-client mysql-common
     if [ $? -ne 0 ]; then
       echo "ERROR: Failed to purge MySQL."
       exit 1
