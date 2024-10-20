@@ -471,8 +471,6 @@ remove_existing_installation() {
   echo "|  Removing Existing Web Server Installation |"
   echo "+--------------------------------------------+"
 
-  echo "mysql-server mysql-server/root_password password $pass" | sudo debconf-set-selections
-  echo "mysql-server mysql-server/root_password_again password $pass" | sudo debconf-set-selections
 
   echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
   echo "phpmyadmin phpmyadmin/app-password-confirm password $pass" | sudo debconf-set-selections
@@ -480,14 +478,14 @@ remove_existing_installation() {
   echo "phpmyadmin phpmyadmin/mysql/app-pass password $pass" | sudo debconf-set-selections
   echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
   
-  export DEBIAN_FRONTEND=noninteractive
+  # export DEBIAN_FRONTEND=noninteractive
 
   # Stop and purge Apache if installed
   if command -v apache2 > /dev/null 2>&1; then
     if systemctl is-active --quiet apache2; then
       sudo systemctl stop apache2
     fi
-    sudo apt-get remove  -y --purge apache2 apache2-utils apache2.2-bin apache2-common apache2-doc apache2-mpm-prefork apache2-utils
+    sudo apt-get purge -y apache2 apache2-utils apache2.2-bin apache2-common apache2-doc apache2-mpm-prefork apache2-utils
     sudo rm -rf /etc/apache2
   fi
 
@@ -496,7 +494,7 @@ remove_existing_installation() {
     if systemctl is-active --quiet nginx; then
       sudo systemctl stop nginx 
     fi
-    sudo apt-get remove  -y --purge nginx nginx-common nginx-core 
+    sudo apt-get purge -y nginx nginx-common nginx-core 
     sudo rm -rf /etc/nginx
   fi
 
@@ -505,7 +503,7 @@ remove_existing_installation() {
     if systemctl is-active --quiet mysql; then
       sudo systemctl stop mysql 
     fi
-    sudo apt-get remove  -y --purge mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-*
+    sudo apt-get purge -y mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-*
     sudo rm -rf /etc/mysql /var/lib/mysql
   fi
 
@@ -514,12 +512,12 @@ remove_existing_installation() {
     if systemctl is-active --quiet php-fpm; then
       sudo systemctl stop php-fpm
     fi
-    sudo apt-get remove  -y --purge php-fpm
+    sudo apt-get purge -y php-fpm
     sudo rm -rf /etc/php /var/lib/php
   fi
 
   # Purge PHP and phpMyAdmin
-  sudo apt-get remove  -y --purge php* phpmyadmin
+  sudo apt-get purge -y php* phpmyadmin
   sudo rm -rf /usr/share/phpmyadmin /var/www/html/index.html /var/www/html/phpmyadmin /etc/php
 
   # Clean up
