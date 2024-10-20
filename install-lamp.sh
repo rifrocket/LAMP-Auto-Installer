@@ -465,10 +465,22 @@ install_composer() {
   echo "+--------------------------------------+"
 }
 
+# Remove existing Apache, Nginx, MySQL, PHP, and phpMyAdmin
 remove_existing_installation() {
   echo "+--------------------------------------------+"
   echo "|  Removing Existing Web Server Installation |"
   echo "+--------------------------------------------+"
+
+  echo "mysql-server mysql-server/root_password password $pass" | sudo debconf-set-selections
+  echo "mysql-server mysql-server/root_password_again password $pass" | sudo debconf-set-selections
+
+  echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/app-password-confirm password $pass" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/mysql/admin-pass password $pass" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/mysql/app-pass password $pass" | sudo debconf-set-selections
+  echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
+  
+  export DEBIAN_FRONTEND=noninteractive
 
   # Stop and purge Apache if installed
   if command -v apache2 > /dev/null 2>&1; then
@@ -477,7 +489,6 @@ remove_existing_installation() {
     fi
     sudo apt-get purge -y apache2 apache2-utils apache2.2-bin apache2-common apache2-doc apache2-mpm-prefork apache2-utils
     sudo rm -rf /etc/apache2
-    echo "Apache removed."
   fi
 
   # Stop and purge Nginx if installed
@@ -487,7 +498,6 @@ remove_existing_installation() {
     fi
     sudo apt-get purge -y nginx nginx-common nginx-core 
     sudo rm -rf /etc/nginx
-    echo "Nginx removed."
   fi
 
   # Stop and purge MySQL if installed
@@ -497,7 +507,6 @@ remove_existing_installation() {
     fi
     sudo apt-get purge -y mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-*
     sudo rm -rf /etc/mysql /var/lib/mysql
-    echo "MySQL removed."
   fi
 
   # Stop and purge PHP-FPM if installed
@@ -507,23 +516,24 @@ remove_existing_installation() {
     fi
     sudo apt-get purge -y php-fpm
     sudo rm -rf /etc/php /var/lib/php
-    echo "PHP-FPM removed."
   fi
 
   # Purge PHP and phpMyAdmin
   sudo apt-get purge -y php* phpmyadmin
   sudo rm -rf /usr/share/phpmyadmin /var/www/html/index.html /var/www/html/phpmyadmin /etc/php
-  echo "PHP and phpMyAdmin removed."
 
   # Clean up
   sudo apt-get autoremove -y
   sudo apt-get autoclean -y
   sudo apt-get clean
 
+  unset DEBIAN_FRONTEND
+
   echo "+--------------------------------------+"
   echo "|   Existing Installation Removed      |"
   echo "+--------------------------------------+"
 }
+
 
 
 
