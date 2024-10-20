@@ -472,98 +472,59 @@ remove_existing_installation() {
 
   # Stop and purge Apache if installed
   if command -v apache2 > /dev/null 2>&1; then
-    sudo systemctl stop apache2
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to stop Apache."
-      exit 1
+    if systemctl is-active --quiet apache2; then
+      sudo systemctl stop apache2
     fi
-
-    sudo apt-get purge -y apache2 apache2-utils apache2.2-bin
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to purge Apache."
-      exit 1
-    fi
-
+    sudo apt-get purge -y apache2 apache2-utils apache2.2-bin apache2-common apache2-doc apache2-mpm-prefork apache2-utils
     sudo rm -rf /etc/apache2
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to remove Apache configuration."
-      exit 1
-    fi
+    echo "Apache removed."
   fi
 
   # Stop and purge Nginx if installed
   if command -v nginx > /dev/null 2>&1; then
-    sudo systemctl stop nginx
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to stop Nginx."
-      exit 1
+    if systemctl is-active --quiet nginx; then
+      sudo systemctl stop nginx 
     fi
-
-    sudo apt-get purge -y nginx
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to purge Nginx."
-      exit 1
-    fi
-
+    sudo apt-get purge -y nginx nginx-common nginx-core 
     sudo rm -rf /etc/nginx
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to remove Nginx configuration."
-      exit 1
-    fi
+    echo "Nginx removed."
   fi
 
   # Stop and purge MySQL if installed
   if command -v mysql > /dev/null 2>&1; then
-    sudo systemctl stop mysql
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to stop MySQL."
-      exit 1
+    if systemctl is-active --quiet mysql; then
+      sudo systemctl stop mysql 
     fi
+    sudo apt-get purge -y mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-*
+    sudo rm -rf /etc/mysql /var/lib/mysql
+    echo "MySQL removed."
+  fi
 
-    sudo apt-get purge -y mysql-server mysql-client mysql-common
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to purge MySQL."
-      exit 1
+  # Stop and purge PHP-FPM if installed
+  if command -v php-fpm > /dev/null 2>&1; then
+    if systemctl is-active --quiet php-fpm; then
+      sudo systemctl stop php-fpm
     fi
-
-    sudo rm -rf /etc/mysql
-    if [ $? -ne 0 ]; then
-      echo "ERROR: Failed to remove MySQL configuration."
-      exit 1
-    fi
+    sudo apt-get purge -y php-fpm
+    sudo rm -rf /etc/php /var/lib/php
+    echo "PHP-FPM removed."
   fi
 
   # Purge PHP and phpMyAdmin
   sudo apt-get purge -y php* phpmyadmin
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to purge PHP or phpMyAdmin."
-    exit 1
-  fi
-
-  # Remove additional files
-  sudo rm -rf /usr/share/phpmyadmin /var/www/html/index.html
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to remove additional files."
-    exit 1
-  fi
+  sudo rm -rf /usr/share/phpmyadmin /var/www/html/index.html /var/www/html/phpmyadmin /etc/php
+  echo "PHP and phpMyAdmin removed."
 
   # Clean up
   sudo apt-get autoremove -y
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to autoremove packages."
-    exit 1
-  fi
-
   sudo apt-get autoclean -y
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to autoclean packages."
-    exit 1
-  fi
+  sudo apt-get clean
 
   echo "+--------------------------------------+"
   echo "|   Existing Installation Removed      |"
   echo "+--------------------------------------+"
 }
+
 
 
 
